@@ -125,16 +125,19 @@ function createSetupStore(
     return function () {
       let afterCallbackList = [];
       let errorCallbackList = [];
+
+      function after(cb) {
+        addSubscription(afterCallbackList, cb);
+      }
+      function onError(cb) {
+        addSubscription(errorCallbackList, cb);
+      }
+      triggerSubscriptions(actionSubscriptions, {
+        name,
+        after,
+        onError,
+      }, name);
       let ret;
-      let arg = {
-        after(cb) {
-          addSubscription(afterCallbackList, cb);
-        },
-        onError(cb) {
-          addSubscription(errorCallbackList, cb);
-        },
-      };
-      triggerSubscriptions(actionSubscriptions, arg, name);
       try {
         ret = action.apply(store, arguments as any);
       } catch (err) {
@@ -142,7 +145,7 @@ function createSetupStore(
         throw err;
       }
       if (ret instanceof Promise) {
-        ret
+        return ret
           .then((res) => {
             triggerSubscriptions(afterCallbackList, res);
             return res;
@@ -151,9 +154,10 @@ function createSetupStore(
             triggerSubscriptions(errorCallbackList, err);
             return Promise.reject(err);
           });
-      } else {
-        triggerSubscriptions(afterCallbackList, ret);
       }
+
+      triggerSubscriptions(afterCallbackList, ret);
+
       return ret;
     };
   }

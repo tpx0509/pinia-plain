@@ -19,7 +19,7 @@ export const useCounter = defineStore('counter1',{
     actions :{
         increment(payload) {
             return new Promise((resolve) => {
-                this.count+=payload
+                this.count2+=payload
                 setTimeout(() => {
                     resolve(this.count2)
                 }, 1000);
